@@ -1,0 +1,68 @@
+name: ubuntu-desktop-arm64
+display-name: Ubuntu Desktop arm64
+revision: 1
+architecture: arm64
+series: noble
+class: preinstalled
+kernel: linux-image-renesas
+gadget:
+  url: 'file://../../gadget/classic'
+  type: directory
+rootfs:
+  mirror: "http://ports.ubuntu.com/ubuntu-ports/"
+  sources-list-deb822: true
+  pocket: updates
+  components:
+    - main
+    - restricted
+  seed:
+    urls:
+      - "https://git.launchpad.net/~ubuntu-core-dev/ubuntu-seeds/+git/"
+    branch: noble
+    names:
+      - desktop-minimal
+      - minimal
+      - standard
+      - cloud-image
+customization:
+  cloud-init:
+    user-data: |
+      #cloud-config
+      user:
+        groups: [adm, cdrom, dip, lxd, sudo, video, audio, plugdev, system, drpai, render]
+      chpasswd:
+        expire: true
+        users:
+          - name: ubuntu
+            password: ubuntu
+            type: text
+    meta-data: |
+      dsmode: local
+      instance-id: ubuntu-desktop
+  extra-snaps:
+    - name: gnome-46-2404
+    - name: mesa-2404
+    - name: snapd
+  extra-packages:
+    # FIXME using extra-packages as a workaround for missing bits to make the
+    # system bootable that should be pulled by seeds or metapackages
+    # signed EFI boot chain
+    - name: grub-efi-arm64-signed
+    - name: shim-signed
+    # for update-grub
+    - name: grub2-common
+    - name: libmali-renesas-rz-g2l-g2lc
+    - name: libmali-renesas-rz-helper
+    - name: renesas-iot-defaults
+  manual:
+    fstab:
+      - label: 'platform'
+        mountpoint: '/boot/platform'
+        filesystem-type: 'ext4'
+        dump: false
+        fsck-order: 1
+artifacts:
+  img:
+    - name: ubuntu-noble-desktop-rz.img
+  manifest:
+    name: "ubuntu-noble-desktop-rz-filesystem-manifest.txt"

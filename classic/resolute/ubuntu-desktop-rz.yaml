@@ -1,0 +1,72 @@
+name: ubuntu-desktop-arm64
+display-name: Ubuntu Desktop arm64
+revision: 1
+architecture: arm64
+series: resolute
+class: preinstalled
+kernel: linux-image-renesas
+gadget:
+  url: "file://../../gadget/classic"
+  type: directory
+rootfs:
+  mirror: "http://ports.ubuntu.com/ubuntu-ports/"
+  sources-list-deb822: true
+  pocket: updates
+  components:
+    - main
+    - restricted
+  seed:
+    urls:
+      - "https://git.launchpad.net/~ubuntu-core-dev/ubuntu-seeds/+git/"
+    branch: resolute
+    names:
+      - desktop-minimal
+      - minimal
+      - standard
+      - cloud-image
+customization:
+  cloud-init:
+    user-data: |
+      #cloud-config
+      user:
+        groups: [adm, cdrom, dip, lxd, sudo, video, audio, plugdev, system, drpai, render]
+      chpasswd:
+        expire: true
+        users:
+          - name: ubuntu
+            password: ubuntu
+            type: text
+    meta-data: |
+      dsmode: local
+      instance-id: ubuntu-desktop
+  extra-snaps:
+    - name: snapd
+    # FIXME: The following snaps are added as a workaround for early resolute development.
+    # They provide the gnome-42-2204 content interface required by Firefox on arm64.
+    # Remove these once Firefox transitions to core24/core26 bases.
+    - name: gnome-42-2204
+    - name: core22
+  extra-packages:
+    # FIXME: Renesas packages disabled until available for resolute:
+    #   - libmali-renesas-rz-g2l-g2lc (GPU)
+    #   - libmali-renesas-rz-helper (GPU)
+    - name: renesas-iot-defaults
+    # FIXME using extra-packages as a workaround for missing bits to make the
+    # system bootable that should be pulled by seeds or metapackages
+    # signed EFI boot chain
+    - name: grub-efi-arm64-signed
+    - name: shim-signed
+    # for update-grub
+    - name: grub2-common
+  manual:
+    fstab:
+      - label: 'platform'
+        mountpoint: '/boot/platform'
+        filesystem-type: 'ext4'
+        dump: false
+        fsck-order: 1
+artifacts:
+  img:
+    - name: ubuntu-resolute-desktop-rz.img
+  manifest:
+    name: "ubuntu-resolute-desktop-rz-filesystem-manifest.txt"

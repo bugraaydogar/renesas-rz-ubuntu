@@ -1,0 +1,72 @@
+name: ubuntu-server-arm64
+display-name: Ubuntu Server arm64
+revision: 1
+architecture: arm64
+series: resolute
+class: preinstalled
+kernel: linux-image-renesas
+gadget:
+  url: 'file://../../gadget/classic'
+  type: directory
+rootfs:
+  mirror: "http://ports.ubuntu.com/ubuntu-ports/"
+  sources-list-deb822: true
+  pocket: updates
+  components:
+    - main
+    - restricted
+  seed:
+    urls:
+      - "https://git.launchpad.net/~ubuntu-core-dev/ubuntu-seeds/+git/"
+    branch: resolute
+    names:
+      - server
+      - minimal
+      - standard
+      - cloud-image
+customization:
+  cloud-init:
+    user-data: |
+      #cloud-config
+      user:
+        groups: [adm, cdrom, dip, lxd, sudo, video, audio, plugdev, system, drpai, render]
+      chpasswd:
+        expire: true
+        users:
+          - name: ubuntu
+            password: ubuntu
+            type: text
+    meta-data: |
+      dsmode: local
+      instance-id: ubuntu-server
+    network-config: |
+      #cloud-config
+      network:
+        version: 2
+        renderer: NetworkManager
+  extra-snaps:
+    - name: snapd
+  extra-packages:
+    - name: renesas-iot-defaults
+    # Use network-manager in IoT server image since it handles random MAC and
+    # wireless better
+    - name: network-manager
+    # FIXME using extra-packages as a workaround for missing bits to make the
+    # system bootable that should be pulled by seeds or metapackages
+    # signed EFI boot chain
+    - name: grub-efi-arm64-signed
+    - name: shim-signed
+    # for update-grub
+    - name: grub2-common
+  manual:
+    fstab:
+      - label: 'platform'
+        mountpoint: '/boot/platform'
+        filesystem-type: 'ext4'
+        dump: false
+        fsck-order: 1
+artifacts:
+  img:
+    - name: ubuntu-resolute-server-rz.img
+  manifest:
+    name: "ubuntu-resolute-server-rz-filesystem-manifest.txt"
